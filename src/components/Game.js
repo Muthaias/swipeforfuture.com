@@ -108,13 +108,12 @@ export default class Game extends Component {
         this.setState({
             world: updatedWorld,
             rounds: this.state.rounds + 1,
-        }, () => {
-            this.prepareNextCard(card, currentAction)
+            card: this.getNextCard(updatedWorld, card, currentAction)
         })
     }
 
-    prepareNextCard(card, currentAction) {
-        const availableEvents = this.getAvailableEvents(this.state.world)
+    getNextCard(world, card, currentAction) {
+        const availableEvents = this.getAvailableEvents(world)
         const eventStartingNow =
             card.type !== 'event' ? this.selectNextEvent(availableEvents) : null
         let nextCard
@@ -128,11 +127,11 @@ export default class Game extends Component {
         } else if (eventStartingNow) {
             nextCard = this.selectEventCard(eventStartingNow.initialEventCardId)
         } else {
-            const availableCards = this.getAvailableCards(this.state.world)
+            const availableCards = this.getAvailableCards(world)
             nextCard = this.selectNextCard(availableCards)
         }
 
-        this.setState({ card: nextCard })
+        return nextCard;
     }
 
     getUpdatedWorld({ modifier = {}, flags = {}, modifierType = 'add' }) {
