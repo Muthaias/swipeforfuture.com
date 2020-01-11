@@ -7,7 +7,7 @@ import Stats from './Stats'
 // -------
 // TODO: Move to data loader module
 
-import gameCards from '../data/cards.js'
+import {cards as gameCards} from '../data/CardBuilder'
 import worldEvents from '../data/events.js'
 import eventCards from '../data/event-cards.js'
 

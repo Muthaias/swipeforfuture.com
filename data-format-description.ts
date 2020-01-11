@@ -7,7 +7,7 @@ interface CardDescription {
     weight: number
 }
 
-interface CardActionData {
+export interface CardActionData {
     description?: string
     modifierType?: 'add' | 'set' | 'replace'
     modifier?: {
@@ -21,7 +21,7 @@ interface CardActionData {
     }
 }
 
-interface CardData extends CardDescription {
+export interface CardData extends CardDescription {
     isAvailableWhen: WorldQuery[]
     actions: {
         left: CardActionData
@@ -31,13 +31,9 @@ interface CardData extends CardDescription {
 
 type WorldStateRange = [number, number]
 
-interface WorldQuery {
+export interface WorldQuery {
     state?: {
-        environment?: WorldStateRange
-        people?: WorldStateRange
-        security?: WorldStateRange
-        money?: WorldStateRange
-        [x: string]: WorldStateRange
+        [x: string]: WorldStateRange,
     }
     flags?: {
         [x: string]: boolean
