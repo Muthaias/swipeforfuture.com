@@ -37,7 +37,7 @@
         "initialEventCardId": "welcome"
     },
     {
-        "probability": 0.5,
+        "probability": 0.9,
         "shouldTriggerWhen": [
             {
                 "flags": {
@@ -49,7 +49,7 @@
         "initialEventCardId": "envira-init"
     },
     {
-        "probability": 0.5,
+        "probability": 0.9,
         "shouldTriggerWhen": [
             {
                 "flags": {

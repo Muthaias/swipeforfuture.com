@@ -2,7 +2,7 @@
     "end-game": {
         "image": "https://images.unsplash.com/photo-1497039465987-61d305728610?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=800&q=60",
         "title": "The World Has Ended.",
-        "distance": "100 miles away",
+        "distance": "Everywhere",
         "text": "Please find a new planet to destroy, if you want to proceed. And do not try to swipe. Please.",
         "weight": 1000,
         "actions": {
@@ -28,7 +28,7 @@
     "welcome": {
         "image": "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?fit=crop&w=800&q=60",
         "title": "Welcome!",
-        "distance": "",
+        "distance": "Parliament House",
         "text": "Hi! My name is Maria. You must be the new president. Do you want to take a lunch to get up to speed with your new duties?",
         "weight": 1000,
         "actions": {
@@ -54,7 +54,7 @@
     "welcome-loop": {
         "image": "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?fit=crop&w=800&q=60",
         "title": "Seriously!",
-        "distance": "",
+        "distance": "Parliament House",
         "text": "We need to talk! Get your head in the game.",
         "weight": 1000,
         "actions": {
@@ -80,7 +80,7 @@
     "welcome-lunch": {
         "image": "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?fit=crop&w=800&q=60",
         "title": "The lunch meeting",
-        "distance": "",
+        "distance": "Restaurant Palermo",
         "text": "Really nice lunch! Now your first big decision has come. Should you prioritize the economy (left) or environment (right)?",
         "weight": 1000,
         "actions": {
@@ -116,7 +116,7 @@
     "envira-init": {
         "image": "https://images.unsplash.com/photo-1546541612-82d19b258cd5?fit=crop&w=800&q=60",
         "title": "The activist",
-        "distance": "",
+        "distance": "Outside the Parliament House",
         "text": "Hi. My name is Envira. I am a climate lobbyist and you'll be seing me from time to time. I wish you good luck and I hope we'll have constructive meetings in the future.",
         "weight": 1000,
         "actions": {
@@ -124,7 +124,8 @@
                 "modifier": {
                     "type": "add",
                     "state": {
-                        "environment": -10
+                        "environment": -10,
+                        "envira-patience": 0
                     },
                     "flags": {
                         "envira-init": true
@@ -136,7 +137,8 @@
                 "modifier": {
                     "type": "add",
                     "state": {
-                        "environment": 10
+                        "environment": 10,
+                        "envira-patience": 5
                     },
                     "flags": {
                         "envira-init": true
@@ -150,8 +152,8 @@
     "infro-init": {
         "image": "https://images.unsplash.com/photo-1529088746738-c4c0a152fb2c?fit=crop&w=800&q=60",
         "title": "The constructor",
-        "distance": "",
-        "text": "Hello sir. I'm Infran. I'll be sure to keep you updated on the nations infrastructure. Are we clear?",
+        "distance": "On the phone",
+        "text": "Hello sir. I'm Infran. I'll be sure to keep you updated on the nation's infrastructure. Are we clear?",
         "weight": 1000,
         "actions": {
             "left": {
