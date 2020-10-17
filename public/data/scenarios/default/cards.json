@@ -376,11 +376,6 @@
     },
     {
         "type": "card",
-        "image": "https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?fit=crop&w=800&q=60",
-        "title": "Our solar project is ready!",
-        "location": "The greener other side",
-        "text": "Congratulations! We beat the initial German energy expansion ⚡️",
-        "weight": 100,
         "isAvailableWhen": [
             {
                 "state": {
@@ -394,8 +389,14 @@
                 }
             }
         ],
+        "image": "https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?fit=crop&w=800&q=60",
+        "title": "Our solar project is ready!",
+        "text": "Congratulations! We beat the initial German energy expansion ⚡️",
+        "location": "The greener other side",
+        "weight": 100,
         "actions": {
             "left": {
+                "description": "At what cost?",
                 "modifier": {
                     "type": "add",
                     "state": {
@@ -410,6 +411,7 @@
                 }
             },
             "right": {
+                "description": "That's great!",
                 "modifier": {
                     "type": "add",
                     "state": {
@@ -427,11 +429,6 @@
     },
     {
         "type": "card",
-        "image": "https://images.pexels.com/photos/3044473/pexels-photo-3044473.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=300",
-        "title": "Cheap but dirty brown coal for sale",
-        "location": "Working class district",
-        "text": "We've got an interesting offer: Buy a modern brown coal power plant cheaply to generate electricity. Deal? Great! (WATCH OUT FOR ENVIRA though...)",
-        "weight": 100,
         "isAvailableWhen": [
             {
                 "state": {
@@ -451,8 +448,14 @@
                 "flags": {}
             }
         ],
+        "image": "https://images.pexels.com/photos/3044473/pexels-photo-3044473.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=300",
+        "title": "Cheap but dirty brown coal for sale",
+        "text": "We've got an interesting offer: Buy a modern brown coal power plant cheaply to generate electricity. Deal? Great! (WATCH OUT FOR ENVIRA though...)",
+        "location": "Working class district",
+        "weight": 100,
         "actions": {
             "left": {
+                "description": "I have other offers to consider.",
                 "modifier": {
                     "type": "add",
                     "state": {
@@ -467,6 +470,7 @@
                 }
             },
             "right": {
+                "description": "Give me some of that!",
                 "modifier": {
                     "type": "add",
                     "state": {

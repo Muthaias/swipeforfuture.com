@@ -5,20 +5,31 @@ import {
     unsplashImage,
     pexelsImage,
 } from '../../content-utils'
+import { cardContent, cardGameProperties } from "./card-utils";
 import { ENVIRONMENT, MONEY, PEOPLE, SECURITY, POPULARITY } from './stats'
 import { VARS } from './vars'
 import { FLAGS } from './flags'
 
+const germanEnergyCompetition = cardContent(
+    unsplashImage('1497435334941-8c899ee9e8e9'),
+    "Our solar project is ready!",
+    "Congratulations! We beat the initial German energy expansion ⚡️",
+    "The greener other side",
+    ["At what cost?", "That's great!"]
+);
+
+const brownCoalForSale = cardContent(
+    pexelsImage('3044473'),
+    "Cheap but dirty brown coal for sale",
+    "We've got an interesting offer: Buy a modern brown coal power plant cheaply to generate electricity. Deal? Great! (WATCH OUT FOR ENVIRA though...)",
+    "Working class district",
+    ["I have other offers to consider.", "Give me some of that!"]
+);
+
 export const otherCards: CardData[] = [
-    {
-        type: 'card',
-        image: unsplashImage('1497435334941-8c899ee9e8e9'),
-        title: 'Our solar project is ready!',
-        location: 'The greener other side',
-        text:
-            'Congratulations! We beat the initial German energy expansion ⚡️',
-        weight: 100,
-        isAvailableWhen: [
+    cardGameProperties(
+        germanEnergyCompetition,
+        [
             worldQuery(
                 {
                     [VARS.SOLAR_INVESTMENTS]: [1, 1],
@@ -28,8 +39,8 @@ export const otherCards: CardData[] = [
                 },
             ),
         ],
-        actions: {
-            left: addAction({
+        [
+            addAction({
                 [ENVIRONMENT]: 30,
                 [PEOPLE]: 15,
                 [SECURITY]: 15,
@@ -37,48 +48,48 @@ export const otherCards: CardData[] = [
                 [POPULARITY]: 20,
                 [VARS.SOLAR_INVESTMENTS]: 100,
             }),
-            right: addAction({
+            addAction({
                 [ENVIRONMENT]: 30,
                 [PEOPLE]: 15,
                 [SECURITY]: 15,
                 [MONEY]: 5,
                 [POPULARITY]: 20,
                 [VARS.SOLAR_INVESTMENTS]: 100,
-            }),
-        },
-    },
-    {
-        type: 'card',
-        image: pexelsImage('3044473'),
-        title: 'Cheap but dirty brown coal for sale',
-        location: 'Working class district',
-        text:
-            "We've got an interesting offer: Buy a modern brown coal power plant cheaply to generate electricity. Deal? Great! (WATCH OUT FOR ENVIRA though...)",
-        weight: 100,
-        isAvailableWhen: [
+            })
+        ],
+        100
+    ),
+    cardGameProperties(
+        brownCoalForSale,
+        [
             worldQuery({
                 [ENVIRONMENT]: [21, 100],
                 [MONEY]: [15, 100],
                 [VARS.BROWN_COAL_PLANTS]: [0, 0],
             }),
         ],
-        actions: {
-            left: addAction({
-                [ENVIRONMENT]: 10,
-                [PEOPLE]: 10,
-                [SECURITY]: 15,
-                [MONEY]: -5,
-                [POPULARITY]: 25,
-                [VARS.BROWN_COAL_PLANTS]: 0,
-            }),
-            right: addAction({
-                [ENVIRONMENT]: -20,
-                [PEOPLE]: -15,
-                [SECURITY]: -10,
-                [MONEY]: 40,
-                [POPULARITY]: -20,
-                [VARS.BROWN_COAL_PLANTS]: 1,
-            }),
-        },
-    },
+        [
+            addAction(
+                {
+                    [ENVIRONMENT]: 10,
+                    [PEOPLE]: 10,
+                    [SECURITY]: 15,
+                    [MONEY]: -5,
+                    [POPULARITY]: 25,
+                    [VARS.BROWN_COAL_PLANTS]: 0,
+                }
+            ),
+            addAction(
+                {
+                    [ENVIRONMENT]: -20,
+                    [PEOPLE]: -15,
+                    [SECURITY]: -10,
+                    [MONEY]: 40,
+                    [POPULARITY]: -20,
+                    [VARS.BROWN_COAL_PLANTS]: 1,
+                }
+            )
+        ],
+        100
+    ),
 ]
