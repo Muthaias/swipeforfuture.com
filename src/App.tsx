@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react'
 import styled from 'styled-components/macro'
 import { createGlobalStyle } from 'styled-components'
 
-import Game from './components/Game'
+import { ScenarioContext } from './contexts/scenario'
+import { Deck } from './components/alternative/Deck'
 import { GameScenario, BasicGameScenario } from './game/GameScenario'
 import { loadScenario } from './game/load-scenario'
 
@@ -54,7 +55,11 @@ function App({ path }: AppProps) {
     return (
         <Container>
             <GlobalStyles />
-            {scenario && <Game scenario={scenario} />}
+            {scenario ? (
+                <ScenarioContext.Provider value={scenario}>
+                    <Deck />
+                </ScenarioContext.Provider>
+            ) : null}
         </Container>
     )
 }

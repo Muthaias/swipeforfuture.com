@@ -5,7 +5,7 @@ import { animated, interpolate } from 'react-spring'
 import { useSpring } from 'react-spring'
 import { useGesture, GestureState } from 'react-with-gesture'
 
-import { useKeyboardEvent } from '../util/hooks'
+import { useKeyboardEvent } from '../hooks'
 import { CardData, EventCard } from '../game/ContentTypes'
 import { SwipeDirection } from '../util/constants'
 
@@ -52,7 +52,7 @@ const Card: React.FunctionComponent<CardProps> = ({
         ...to(i),
         from: from(),
     }))
-    const [directionPreview, setDirectionPreview] = useState<number>(0);
+    const [directionPreview, setDirectionPreview] = useState<number>(0)
 
     const [cardState] = useState<{
         isGone: boolean
@@ -84,7 +84,7 @@ const Card: React.FunctionComponent<CardProps> = ({
                 cardState.currentKey = null
             }, 200)
         }
-        setDirectionPreview(down ? dir : 0);
+        setDirectionPreview(down ? dir : 0)
         const isGone = cardState.isGone
 
         const x = isGone ? (200 + window.innerWidth) * dir : down ? xDelta : 0

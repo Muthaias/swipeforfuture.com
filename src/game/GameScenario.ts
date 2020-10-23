@@ -31,24 +31,56 @@ export type GameScenarioOptions = {
     worldStateExtensions: WorldStateExtension[]
 }
 
+export class MockGameScenario implements GameScenario {
+    getInitialState(): GameState {
+        return this.state
+    }
+    getUpdatedState(
+        prevState: GameState,
+        card: CardData | EventCard,
+        action: CardActionData | EventCardActionData,
+    ): GameState {
+        return this.state
+    }
+    get stats(): GameWorld['stats'] {
+        return []
+    }
+    get state(): GameState {
+        return {
+            world: { state: {}, flags: {} },
+            card: {
+                type: 'card',
+                image: '',
+                title: '',
+                text: '',
+                location: '',
+                weight: 1,
+                actions: {
+                    left: { modifier: {} },
+                    right: { modifier: {} },
+                },
+                isAvailableWhen: [],
+            },
+            rounds: 0,
+        }
+    }
+}
+
 /**
  * BasicGameScenario used to simulate game scenarios.
  *
  * The design goal is to keep this stateless, allowing user code to manage state.
  */
 export class BasicGameScenario implements GameScenario {
-    protected _scenario: Omit<GameWorld, "worldStateModifiers">
+    protected _scenario: Omit<GameWorld, 'worldStateModifiers'>
     protected _random: () => number
     protected _worldStateExtensions: WorldStateExtension[]
 
     constructor(
-        scenario: Omit<GameWorld, "worldStateModifiers">,
+        scenario: Omit<GameWorld, 'worldStateModifiers'>,
         options: Partial<GameScenarioOptions> = {},
     ) {
-        const {
-            random = Math.random,
-            worldStateExtensions = []
-        } = options;
+        const { random = Math.random, worldStateExtensions = [] } = options
         this._scenario = scenario
         this._random = random
         this._worldStateExtensions = worldStateExtensions
@@ -322,11 +354,11 @@ export class BasicGameScenario implements GameScenario {
 
     /**
      * Create a runtime GameScenario from data
-     * 
+     *
      * @param data Data needed to setup a basic game scenario
      */
     public static fromData(data: GameWorld): GameScenario {
         const extensions = worldStateExtensionFromData(data.worldStateModifiers)
-        return new BasicGameScenario(data, {worldStateExtensions: extensions});
+        return new BasicGameScenario(data, { worldStateExtensions: extensions })
     }
 }

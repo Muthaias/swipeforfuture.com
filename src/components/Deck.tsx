@@ -3,16 +3,10 @@ import React from 'react'
 import Card from './Card'
 import { DummyCard } from './CardView'
 
-import { CardData, EventCard } from '../game/ContentTypes'
-import { SwipeDirection } from '../util/constants'
+import { DeckProps } from './Game'
 
-type DeckProps = {
-    onSwipe: (card: CardData | EventCard, direction: SwipeDirection) => void
-    card: (CardData | EventCard) & { id: string }
-    tick: number
-}
-const Deck: React.FunctionComponent<DeckProps> = ({
-    onSwipe,
+const Deck: React.FunctionComponent<Partial<DeckProps>> = ({
+    onSwipe = () => {},
     card,
     tick = 0,
 }) => {
@@ -32,13 +26,15 @@ const Deck: React.FunctionComponent<DeckProps> = ({
                     layer={list.length - loopingIndex(index, list.length, tick)}
                 />
             ))}
-            <Card
-                i={0}
-                key={card.id}
-                cardData={card}
-                onSwipe={onSwipe}
-                layer={cardStack.length + 1}
-            />
+            {card !== undefined ? (
+                <Card
+                    i={0}
+                    key={card.id}
+                    cardData={card}
+                    onSwipe={onSwipe}
+                    layer={cardStack.length + 1}
+                />
+            ) : undefined}
         </div>
     )
 }

@@ -7,7 +7,7 @@ import * as GameIcons from 'react-icons/gi'
 import * as FeatherIcons from 'react-icons/fi'
 
 import Bar from './Bar'
-import { StatDefinition } from '../game/ContentTypes'
+import { StatsProps } from './Game'
 
 const Container = styled.header`
     background: #f6fbf5;
@@ -34,11 +34,8 @@ const Icon = styled.div`
     justify-content: center;
     align-items: center;
 `
-type StatsProps = {
-    stats: (StatDefinition & { value: number })[]
-}
 
-const Stats: React.FunctionComponent<StatsProps> = ({ stats }) => (
+const Stats: React.FunctionComponent<StatsProps> = ({ stats = [] }) => (
     <Container>
         {stats.map((s) => {
             const gameIcon = s.icon as keyof typeof GameIcons
