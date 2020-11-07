@@ -179,7 +179,7 @@ export class BasicGame<P> implements Game<P> {
                             ),
                     },
                     right: {
-                        description: data.actions.left.description ?? 'Yes',
+                        description: data.actions.right.description ?? 'Yes',
                         modifier: (state) =>
                             updateParams(
                                 state,
@@ -190,27 +190,79 @@ export class BasicGame<P> implements Game<P> {
                 },
             }
         })
-        const eventCards = Object.keys(gameWorld.eventCards).map<Card<Params>>(
-            (key) => {
-                const data = gameWorld.eventCards[key]
-                return {
-                    id: key,
-                    image: data.image,
-                    title: data.title,
-                    text: data.text,
-                    location: data.location,
-                    match: () => false,
-                    weight: 0,
-                    actions: {
-                        left: {
-                            description: 'No',
-                            modifier: (s) => s,
-                        },
-                        right: {
-                            description: 'Yes',
-                            modifier: (s) => s,
-                        },
+        const eventCards = Object.keys(gameWorld.eventCards).reduce<{
+            [x: string]: Card<Params>
+        }>((acc, key) => {
+            const data = gameWorld.eventCards[key]
+            acc[key] = {
+                image: data.image,
+                title: data.title,
+                text: data.text,
+                location: data.location,
+                match: () => false,
+                weight: 0,
+                actions: {
+                    left: {
+                        description: data.actions.left.description ?? 'No',
+                        modifier: (state) =>
+                            updateParams(
+                                state,
+                                data.actions.left.modifier,
+                                defaultParams,
+                            ),
                     },
+                    right: {
+                        description: data.actions.right.description ?? 'Yes',
+                        modifier: (state) =>
+                            updateParams(
+                                state,
+                                data.actions.right.modifier,
+                                defaultParams,
+                            ),
+                    },
+                },
+            }
+            return acc
+        }, {})
+        for (const cardId in eventCards) {
+            const data = gameWorld.eventCards[cardId]
+            const eventCard = eventCards[cardId]
+            if (data.actions.left.nextEventCardId) {
+                const targetCard = eventCards[data.actions.left.nextEventCardId]
+                const modifier = eventCard.actions.left.modifier
+                console.log(targetCard)
+                eventCard.actions.left.modifier = (state) => ({
+                    ...modifier(state),
+                    card: targetCard,
+                })
+            }
+            if (data.actions.right.nextEventCardId) {
+                const targetCard =
+                    eventCards[data.actions.right.nextEventCardId]
+                const modifier = eventCard.actions.right.modifier
+                eventCard.actions.right.modifier = (state) => ({
+                    ...modifier(state),
+                    card: targetCard,
+                })
+            }
+        }
+        const events: StateModifier<Params>[] = gameWorld.events.map(
+            (event) => {
+                const paramQueries = event.isAvailableWhen.map((q) => ({
+                    vars: q.state,
+                    flags: q.flags,
+                }))
+                const card = eventCards[event.initialEventCardId]
+                return (state) => {
+                    const shouldExecute = Math.random() <= event.probability
+                    return !state.card &&
+                        shouldExecute &&
+                        hasMatchingParamQuery(state.params, paramQueries)
+                        ? {
+                              ...state,
+                              card: card,
+                          }
+                        : state
                 }
             },
         )
@@ -218,11 +270,9 @@ export class BasicGame<P> implements Game<P> {
             ...stat,
             getValue: ({ params }) => params.vars[stat.id] ?? 0,
         }))
-        return new BasicGame<Params>(
-            [...cards, ...eventCards],
-            stats,
-            defaultParams,
-        )
+        return new BasicGame<Params>([...cards], stats, defaultParams, {
+            tickModifiers: events,
+        })
     }
 }
 
