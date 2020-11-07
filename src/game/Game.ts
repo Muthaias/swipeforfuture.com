@@ -80,7 +80,6 @@ export class BasicGame<P> implements Game<P> {
         this._random = random
         this._tickModifiers = tickModifiers
         this._initialParams = initialParams
-        console.log(this._initialParams)
         this._stats = stats
     }
 
@@ -230,7 +229,6 @@ export class BasicGame<P> implements Game<P> {
             if (data.actions.left.nextEventCardId) {
                 const targetCard = eventCards[data.actions.left.nextEventCardId]
                 const modifier = eventCard.actions.left.modifier
-                console.log(targetCard)
                 eventCard.actions.left.modifier = (state) => ({
                     ...modifier(state),
                     card: targetCard,
@@ -266,14 +264,40 @@ export class BasicGame<P> implements Game<P> {
                 }
             },
         )
+        const parameterLimits = parameterLimiter(
+            gameWorld.stats.map((stat) => stat.id),
+            [0, 100],
+        )
         const stats = gameWorld.stats.map<StatDefinition<Params>>((stat) => ({
             ...stat,
             getValue: ({ params }) => params.vars[stat.id] ?? 0,
         }))
         return new BasicGame<Params>([...cards], stats, defaultParams, {
-            tickModifiers: events,
+            tickModifiers: [...events, parameterLimits],
         })
     }
+}
+
+function parameterLimiter(
+    ids: string[],
+    [min, max]: [number, number],
+): StateModifier<Params> {
+    return (state) => ({
+        ...state,
+        params: {
+            flags: state.params.flags,
+            vars: {
+                ...state.params.vars,
+                ...ids.reduce<Params['vars']>((acc, id) => {
+                    const value = state.params.vars[id]
+                    if (value !== undefined) {
+                        acc[id] = Math.max(min, Math.min(max, value))
+                    }
+                    return acc
+                }, {}),
+            },
+        },
+    })
 }
 
 function hasMatchingParamQuery(
