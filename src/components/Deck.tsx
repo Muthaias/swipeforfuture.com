@@ -1,22 +1,22 @@
 import React from 'react'
 
-import Card from './Card'
+import { Card, CardPresentation } from './Card'
 import { DummyCard } from './CardView'
-
-import { CardData, EventCard } from '../game/ContentTypes'
 import { SwipeDirection } from '../util/constants'
 
 type DeckProps = {
-    onSwipe: (card: CardData | EventCard, direction: SwipeDirection) => void
-    card: (CardData | EventCard) & { id: string }
+    onSwipe: (direction: SwipeDirection) => void
+    card: CardPresentation
     tick: number
 }
-const Deck: React.FunctionComponent<DeckProps> = ({
+
+function Deck({
     onSwipe,
     card,
     tick = 0,
-}) => {
+}: DeckProps): React.ReactElement<any, any> | null {
     const cardStack = Array.apply(null, Array(5)).map((_, index) => index)
+
     return (
         <div className="deck-root">
             {cardStack.map((key, index, list) => (
@@ -34,8 +34,8 @@ const Deck: React.FunctionComponent<DeckProps> = ({
             ))}
             <Card
                 i={0}
-                key={card.id}
-                cardData={card}
+                key={tick}
+                card={card}
                 onSwipe={onSwipe}
                 layer={cardStack.length + 1}
             />

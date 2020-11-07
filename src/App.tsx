@@ -3,7 +3,7 @@ import styled from 'styled-components/macro'
 import { createGlobalStyle } from 'styled-components'
 
 import Game from './components/Game'
-import { GameScenario, BasicGameScenario } from './game/GameScenario'
+import { BasicGame, Params, Game as GameLogic } from './game/Game'
 import { loadScenario } from './game/load-scenario'
 
 const Container = styled.main`
@@ -38,23 +38,23 @@ type AppProps = {
 }
 
 function App({ path }: AppProps) {
-    const [scenario, setScenario] = useState<GameScenario | null>(null)
+    const [game, setGame] = useState<GameLogic<Params> | null>(null)
     useEffect(() => {
         const fetchWorld = async () => {
             const scenarioData = await loadScenario(path)
             if (scenarioData) {
-                const instance = BasicGameScenario.fromData(scenarioData)
-                setScenario(instance)
+                const instance = BasicGame.fromGameWorldData(scenarioData)
+                setGame(instance)
             } else {
                 console.warn('Scenario loading error')
             }
         }
         fetchWorld()
-    }, [path, setScenario])
+    }, [path, setGame])
     return (
         <Container>
             <GlobalStyles />
-            {scenario && <Game scenario={scenario} />}
+            {game && <Game game={game} />}
         </Container>
     )
 }

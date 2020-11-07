@@ -6,8 +6,22 @@ import { useSpring } from 'react-spring'
 import { useGesture, GestureState } from 'react-with-gesture'
 
 import { useKeyboardEvent } from '../util/hooks'
-import { CardData, EventCard } from '../game/ContentTypes'
 import { SwipeDirection } from '../util/constants'
+
+export type CardPresentation = {
+    image: string
+    title: string
+    text: string
+    location: string
+    actions: {
+        left: {
+            description: string
+        }
+        right: {
+            description: string
+        }
+    }
+}
 
 type AnimationState = {
     x: number
@@ -35,18 +49,18 @@ const getThreshold = () => Math.min(200, window.innerWidth / 2)
 
 type CardProps = {
     i: number
-    cardData: CardData | EventCard
-    onSwipe: (card: CardData | EventCard, direction: SwipeDirection) => void
+    card: CardPresentation
+    onSwipe: (direction: SwipeDirection) => void
     layer: number
 }
 
-const Card: React.FunctionComponent<CardProps> = ({
+export const Card: React.FunctionComponent<CardProps> = ({
     i,
-    cardData,
+    card,
     onSwipe,
     layer,
 }) => {
-    const { title, location, text, image, actions } = cardData
+    const { title, location, text, image, actions } = card
 
     const [cardAnimationState, setCardAnimationState] = useSpring(() => ({
         ...to(i),
@@ -80,7 +94,7 @@ const Card: React.FunctionComponent<CardProps> = ({
             // Handle game state updates
             cardState.isGone = true
             window.setTimeout(() => {
-                onSwipe(cardData, dir)
+                onSwipe(dir)
                 cardState.currentKey = null
             }, 200)
         }
@@ -159,5 +173,3 @@ const Card: React.FunctionComponent<CardProps> = ({
         </animated.div>
     )
 }
-
-export default Card
