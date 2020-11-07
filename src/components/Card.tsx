@@ -7,21 +7,7 @@ import { useGesture, GestureState } from 'react-with-gesture'
 
 import { useKeyboardEvent } from '../util/hooks'
 import { SwipeDirection } from '../util/constants'
-
-export type CardPresentation = {
-    image: string
-    title: string
-    text: string
-    location: string
-    actions: {
-        left: {
-            description: string
-        }
-        right: {
-            description: string
-        }
-    }
-}
+import { CardPresentation } from '../game/Types'
 
 type AnimationState = {
     x: number

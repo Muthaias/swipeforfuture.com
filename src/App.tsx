@@ -3,7 +3,8 @@ import styled from 'styled-components/macro'
 import { createGlobalStyle } from 'styled-components'
 
 import Game from './components/Game'
-import { BasicGame, Params, Game as GameLogic } from './game/Game'
+import { Params, Game as GameLogic } from './game/Types'
+import * as GameWorldLoader from './game/GameWorldLoader'
 import { loadScenario } from './game/load-scenario'
 
 const Container = styled.main`
@@ -43,7 +44,7 @@ function App({ path }: AppProps) {
         const fetchWorld = async () => {
             const scenarioData = await loadScenario(path)
             if (scenarioData) {
-                const instance = BasicGame.fromGameWorldData(scenarioData)
+                const instance = GameWorldLoader.load(scenarioData)
                 setGame(instance)
             } else {
                 console.warn('Scenario loading error')

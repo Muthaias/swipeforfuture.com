@@ -4,7 +4,7 @@ import styled from 'styled-components/macro'
 import Deck from './Deck'
 import Stats from './Stats'
 import { SwipeDirection } from '../util/constants'
-import { Card, GameState, Game as GameLogic } from '../game/Game'
+import { GameState, Game as GameLogic } from '../game/Types'
 
 const Footer = styled.footer`
     display: flex;

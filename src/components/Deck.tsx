@@ -1,8 +1,9 @@
 import React from 'react'
 
-import { Card, CardPresentation } from './Card'
+import { Card } from './Card'
 import { DummyCard } from './CardView'
 import { SwipeDirection } from '../util/constants'
+import { CardPresentation } from '../game/Types'
 
 type DeckProps = {
     onSwipe: (direction: SwipeDirection) => void
