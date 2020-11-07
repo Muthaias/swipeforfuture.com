@@ -3,7 +3,7 @@ import styled from 'styled-components/macro'
 import { createGlobalStyle } from 'styled-components'
 
 import Game from './components/Game'
-import { Params, Game as GameLogic } from './game/Types'
+import { Params, Game as GameLogic } from './game'
 import * as GameWorldLoader from './game/GameWorldLoader'
 import { loadScenario } from './game/load-scenario'
 

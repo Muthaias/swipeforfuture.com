@@ -3,63 +3,152 @@ import {
     GameWorldModifier,
     CardActionData,
     EventCardActionData,
+    WorldQuery,
 } from './ContentTypes'
-import {
-    Game,
-    GameState,
-    Card,
-    CardAction,
-    Params,
-    StateModifier,
-    Stat,
-    ParamQuery,
-} from './Types'
+import { Game, GameState, Card, CardAction, StateModifier, Stat } from './Types'
+import { Params, ParamQuery, hasMatchingParamQuery } from './Params'
 import { BasicGame } from './BasicGame'
-import { stateExtensionFromData } from './StateExtensions'
+import { stateExtensionsFromData, createParameterCap } from './StateExtensions'
 
-export function load(gameWorld: GameWorld): Game<Params> {
+/**
+ * Loads a GameWorld object as a Game<Params>.
+ * Uses the data structures to generate a runtime description of the game model.
+ *
+ * @param gameWorld The data definition of the game world
+ * @param random A function used for generating random values between 0 and 1
+ * @returns A Game<Params> object which uses the given data
+ */
+export function load(
+    gameWorld: GameWorld,
+    random: () => number = Math.random,
+): Game<Params> {
     const defaultParams = {
         flags: gameWorld.defaultState.flags,
         vars: gameWorld.defaultState.state,
     }
-    const cards = gameWorld.cards.map<Card<Params>>((data) => {
-        const paramQueries = data.isAvailableWhen.map((q) => ({
-            vars: q.state,
-            flags: q.flags,
-        }))
-        return {
-            image: data.image,
-            title: data.title,
-            text: data.text,
-            location: data.location,
-            match: (s) => hasMatchingParamQuery(s.params, paramQueries),
-            weight: data.weight,
-            actions: {
-                left: dataToAction(data.actions.left, defaultParams, 'No'),
-                right: dataToAction(data.actions.right, defaultParams, 'Yes'),
-            },
-        }
+    const cards = gameWorld.cards.map<Card<Params>>((data) =>
+        cardFromData(data, defaultParams),
+    )
+    const eventCards = eventCardsFromData(gameWorld.eventCards, defaultParams)
+    const events: StateModifier<Params>[] = gameWorld.events.map((event) => {
+        const card = eventCards[event.initialEventCardId]
+        return eventFromData(event, card, random)
     })
-    const eventCards = Object.keys(gameWorld.eventCards).reduce<{
+    const parameterCaps = parameterCapsFromStats(gameWorld.stats)
+    const stats = statsFromData(gameWorld.stats)
+    const stateExtensions = stateExtensionsFromData(
+        gameWorld.worldStateModifiers,
+    )
+    return new BasicGame<Params>([...cards], stats, defaultParams, {
+        tickModifiers: [...events, ...stateExtensions, parameterCaps],
+        random,
+    })
+}
+
+/**
+ * Creates a StateModifier representing an event using data from GameWorld
+ *
+ * @param event The event data
+ * @param card The card to which the event should be linked
+ * @param random The random function used for the probability check
+ * @returns An event trigger in the form of a StateModifier
+ */
+function eventFromData(
+    event: GameWorld['events'][number],
+    card: Card<Params>,
+    random: () => number,
+): StateModifier<Params> {
+    const paramQueries = event.isAvailableWhen.map(worldQueryToParamQuery)
+    return (state) => {
+        const noPreviousCardSetter = !state.card
+        const propabilityHit = random() <= event.probability
+        const shouldExecute =
+            noPreviousCardSetter &&
+            propabilityHit &&
+            hasMatchingParamQuery(state.params, paramQueries)
+        return shouldExecute
+            ? {
+                  ...state,
+                  card: card,
+              }
+            : state
+    }
+}
+
+/**
+ * Creates a list of Stat<Params> from GameWorld data
+ *
+ * @param stats The stats data
+ * @returns A list of Stats
+ */
+function statsFromData(stats: GameWorld['stats']): Stat<Params>[] {
+    return stats.map<Stat<Params>>((stat) => ({
+        ...stat,
+        getValue: ({ params }) => params.vars[stat.id] ?? 0,
+    }))
+}
+
+/**
+ * Creates the standard parameters caps used for a standard GameWorld
+ *
+ * @param stats The stats data
+ * @returns A stat modifier which caps all the vars matched to ids in stats to [0, 100]
+ */
+function parameterCapsFromStats(stats: GameWorld['stats']) {
+    const statVarIds = stats.map((stat) => stat.id)
+    return createParameterCap(statVarIds, 0, 100)
+}
+
+/**
+ * Creates a Card<Params> from regular card data or event card data
+ *
+ * @param data The card data
+ * @param defaultParams The default parameters to use for state reset
+ * @returns A runtime model of a card
+ */
+function cardFromData(
+    data: GameWorld['cards'][number] | GameWorld['eventCards'][string],
+    defaultParams: Params,
+): Card<Params> {
+    const paramQueries = ('isAvailableWhen' in data
+        ? data.isAvailableWhen
+        : []
+    ).map(worldQueryToParamQuery)
+    return {
+        image: data.image,
+        title: data.title,
+        text: data.text,
+        location: data.location,
+        match: (s) => hasMatchingParamQuery(s.params, paramQueries),
+        weight: data.weight,
+        actions: {
+            left: actionFromData(data.actions.left, defaultParams, 'No'),
+            right: actionFromData(data.actions.right, defaultParams, 'Yes'),
+        },
+    }
+}
+
+/**
+ * Creates a map of event cars from GameWorlds event card data
+ *
+ * @param eventCardsData The event card data
+ * @param defaultParams Default params to use for a state reset
+ * @returns A map of event cards
+ */
+function eventCardsFromData(
+    eventCardsData: GameWorld['eventCards'],
+    defaultParams: Params,
+): { [x: string]: Card<Params> } {
+    const eventCards = Object.keys(eventCardsData).reduce<{
         [x: string]: Card<Params>
     }>((acc, key) => {
-        const data = gameWorld.eventCards[key]
-        acc[key] = {
-            image: data.image,
-            title: data.title,
-            text: data.text,
-            location: data.location,
-            match: () => false,
-            weight: 0,
-            actions: {
-                left: dataToAction(data.actions.left, defaultParams, 'No'),
-                right: dataToAction(data.actions.right, defaultParams, 'Yes'),
-            },
-        }
+        const data = eventCardsData[key]
+        acc[key] = cardFromData(data, defaultParams)
         return acc
     }, {})
+
     for (const cardId in eventCards) {
-        const data = gameWorld.eventCards[cardId]
+        const data = eventCardsData[cardId]
         const eventCard = eventCards[cardId]
 
         eventCard.actions.left.modifier = eventCardChain(
@@ -73,40 +162,18 @@ export function load(gameWorld: GameWorld): Game<Params> {
             eventCard.actions.right.modifier,
         )
     }
-    const events: StateModifier<Params>[] = gameWorld.events.map((event) => {
-        const paramQueries = event.isAvailableWhen.map((q) => ({
-            vars: q.state,
-            flags: q.flags,
-        }))
-        const card = eventCards[event.initialEventCardId]
-        return (state) => {
-            const shouldExecute = Math.random() <= event.probability
-            return !state.card &&
-                shouldExecute &&
-                hasMatchingParamQuery(state.params, paramQueries)
-                ? {
-                      ...state,
-                      card: card,
-                  }
-                : state
-        }
-    })
-    const parameterLimits = parameterLimiter(
-        gameWorld.stats.map((stat) => stat.id),
-        [0, 100],
-    )
-    const stats = gameWorld.stats.map<Stat<Params>>((stat) => ({
-        ...stat,
-        getValue: ({ params }) => params.vars[stat.id] ?? 0,
-    }))
-    const stateExtensions = stateExtensionFromData(
-        gameWorld.worldStateModifiers,
-    )
-    return new BasicGame<Params>([...cards], stats, defaultParams, {
-        tickModifiers: [...events, ...stateExtensions, parameterLimits],
-    })
+    return eventCards
 }
 
+/**
+ * Completes an event card action modifier by adding trigger for next card
+ * in case a nextEventCardId is specified
+ *
+ * @param data The action data
+ * @param eventCards An event cards map
+ * @param modifier The current modifier without card trigger
+ * @returns A StateModifier with conditionally added next card trigger
+ */
 function eventCardChain(
     data: EventCardActionData,
     eventCards: { [x: string]: Card<Params> },
@@ -122,7 +189,15 @@ function eventCardChain(
         : modifier
 }
 
-function dataToAction(
+/**
+ * Creates a card action from CardActionData
+ *
+ * @param data
+ * @param defaultParams Default params to use when resetting state
+ * @param defaultDescription The default description in case it is missing in data
+ * @returns A card action with description and param modifier
+ */
+function actionFromData(
     data: CardActionData,
     defaultParams: Params,
     defaultDescription: string,
@@ -133,53 +208,27 @@ function dataToAction(
     }
 }
 
-function parameterLimiter(
-    ids: string[],
-    [min, max]: [number, number],
-): StateModifier<Params> {
-    return (state) => ({
-        ...state,
-        params: {
-            flags: state.params.flags,
-            vars: {
-                ...state.params.vars,
-                ...ids.reduce<Params['vars']>((acc, id) => {
-                    const value = state.params.vars[id]
-                    if (value !== undefined) {
-                        acc[id] = Math.max(min, Math.min(max, value))
-                    }
-                    return acc
-                }, {}),
-            },
-        },
-    })
+/**
+ * Converts a WorldQuery to a ParamQuery
+ *
+ * @param query The WorldQuery
+ * @returns A ParamQuery representing the input WorldQuery
+ */
+function worldQueryToParamQuery(query: WorldQuery): ParamQuery {
+    return {
+        vars: query.state,
+        flags: query.flags,
+    }
 }
 
-function hasMatchingParamQuery(
-    params: Params,
-    worldQueries: ParamQuery[],
-): boolean {
-    return worldQueries.some((q) => isMatchingParamQuery(params, q))
-}
-
-function isMatchingParamQuery(
-    params: Params,
-    { vars = {}, flags = {} }: ParamQuery,
-): boolean {
-    const hasStateMatch = Object.entries(vars).every(
-        ([key, [min, max]]) =>
-            params.vars[key] >= min && params.vars[key] <= max,
-    )
-
-    const result =
-        hasStateMatch &&
-        Object.entries(flags).every(
-            ([flag, value]) => !!params.flags[flag] === value,
-        )
-
-    return result
-}
-
+/**
+ * Updates the params of a GameState given a GameWorldModifier
+ *
+ * @param state The input GameState
+ * @param modifier The modifier data description
+ * @param defaultParams Default params to use for a state reset
+ * @returns The updated GameState
+ */
 function updateParams(
     state: GameState<Params>,
     modifier: GameWorldModifier,

@@ -1,4 +1,4 @@
-import { GameState, StateModifier, Params } from './Types'
+import { GameState, StateModifier, Params } from './'
 import { WorldStateModifier } from './ContentTypes'
 
 export type StateExtension = StateModifier<Params>
@@ -9,7 +9,7 @@ export type StateExtension = StateModifier<Params>
  * @param worldState The world state on which to operate
  * @returns WorldState The updated world state
  */
-export const worldStateRounds: StateExtension = (state: GameState<Params>) => {
+export const useRounds: StateExtension = (state: GameState<Params>) => {
     return {
         ...state,
         params: {
@@ -29,7 +29,7 @@ export const worldStateRounds: StateExtension = (state: GameState<Params>) => {
  * @param length The length of the cycle
  * @returns WorldStateExtension A cyclic world state extension
  */
-export function worldStateCycle(id: string, length: number): StateExtension {
+export function createCycle(id: string, length: number): StateExtension {
     return (state: GameState<Params>) => {
         return {
             ...state,
@@ -53,7 +53,7 @@ export function worldStateCycle(id: string, length: number): StateExtension {
  * @param initialValue The initial value to the reducer
  * @returns A world state extension that reduces a single value from multiple sources
  */
-function reduceState(
+export function createReducer(
     targetId: string,
     sourceIds: string[],
     func: (a: number, b: number) => number,
@@ -87,7 +87,7 @@ function reduceState(
  * @param flagIds Optional ids of the flags to log
  * @returns A configured debug world state extension that logs state and flags to tables
  */
-export function debugLogExtension(
+export function createDebugger(
     stateIds?: string[],
     flagIds?: string[],
 ): StateExtension {
@@ -118,40 +118,70 @@ export function debugLogExtension(
 }
 
 /**
+ * Cap a number of identified parameters to be contained within a range
+ *
+ * @param ids Ids of the params which to limit to the range [min, max]
+ * @param min The minimum number of the range
+ * @param max The maximum number of the range
+ */
+export function createParameterCap(
+    ids: string[],
+    min: number,
+    max: number,
+): StateModifier<Params> {
+    return (state) => ({
+        ...state,
+        params: {
+            flags: state.params.flags,
+            vars: {
+                ...state.params.vars,
+                ...ids.reduce<Params['vars']>((acc, id) => {
+                    const value = state.params.vars[id]
+                    if (value !== undefined) {
+                        acc[id] = Math.max(min, Math.min(max, value))
+                    }
+                    return acc
+                }, {}),
+            },
+        },
+    })
+}
+
+/**
  * Generate a list of world state extension from a data description
  *
  * @param modifiers Data description of modifiers which can be converted to extensions
  */
-export function stateExtensionFromData(
+export function stateExtensionsFromData(
     modifiers: WorldStateModifier[],
 ): StateExtension[] {
     return modifiers.map((modifier) => {
         switch (modifier.type) {
             case 'round':
-                return worldStateRounds
+                return useRounds
             case 'cycle':
-                return worldStateCycle(modifier.id, modifier.length)
+                return createCycle(modifier.id, modifier.length)
             case 'min':
-                return reduceState(
+                return createReducer(
                     modifier.targetId,
                     modifier.sourceIds,
                     (a, b) => Math.min(a, b),
                 )
             case 'max':
-                return reduceState(
+                return createReducer(
                     modifier.targetId,
                     modifier.sourceIds,
                     (a, b) => Math.max(a, b),
                 )
             case 'sum':
-                return reduceState(
+                return createReducer(
                     modifier.targetId,
                     modifier.sourceIds,
                     (a, b) => a + b,
                     0,
                 )
             case 'debug':
-                return debugLogExtension(modifier.stateIds, modifier.flagIds)
+                return createDebugger(modifier.stateIds, modifier.flagIds)
             default:
                 throw new Error(
                     'Missing modifier type: ' + (modifier as any).type,

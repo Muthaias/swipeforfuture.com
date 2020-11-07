@@ -1,21 +1,3 @@
-export type Params = {
-    vars: {
-        [id: string]: number
-    }
-    flags: {
-        [id: string]: boolean
-    }
-}
-
-export type ParamQuery = {
-    vars?: {
-        [id: string]: [number, number]
-    }
-    flags?: {
-        [id: string]: boolean
-    }
-}
-
 export type Stat<P> = {
     getValue: (state: GameState<P>) => number
     id: string
