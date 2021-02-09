@@ -113,3 +113,36 @@ export type EventCardId = string
 export interface EventCardActionData extends CardActionData {
     nextEventCardId: EventCardId | null
 }
+
+export namespace Experimental {
+    export type GameWorld = {
+        stats: StatDefinition[]
+        cards: CardData[]
+        events: WorldEvent[]
+        defaultState: WorldState
+        worldStateModifiers: WorldStateModifier[]
+    }
+
+    export interface CardData extends CardDescription {
+        id: CardId
+        isAvailableWhen: WorldQuery[]
+        actions: {
+            left: CardActionData
+            right: CardActionData
+        }
+    }
+
+    export interface CardActionData {
+        description?: string
+        modifiers: GameWorldModifier[]
+        nextCardId?: CardId
+    }
+
+    export interface WorldEvent {
+        cardId: EventCardId
+        isAvailableWhen: WorldQuery[]
+        probability: number
+    }
+
+    export type CardId = string
+}

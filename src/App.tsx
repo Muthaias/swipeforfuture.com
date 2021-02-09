@@ -6,6 +6,7 @@ import Game from './components/Game'
 import { Game as GameLogic, BasicGameScenario } from './game'
 import * as GameWorldLoader from './game/GameWorldLoader'
 import { loadScenario } from './game/load-scenario'
+import { gameWorld2Experimental } from './game/gameWorld2Experimental'
 
 const Container = styled.main`
     position: absolute;
@@ -47,7 +48,7 @@ function App({ path, useBasicGame = false }: AppProps) {
             if (scenarioData) {
                 const instance = useBasicGame
                     ? BasicGameScenario.fromData(scenarioData)
-                    : GameWorldLoader.load(scenarioData)
+                    : GameWorldLoader.load(gameWorld2Experimental(scenarioData))
                 setGame(instance)
             } else {
                 console.warn('Scenario loading error')

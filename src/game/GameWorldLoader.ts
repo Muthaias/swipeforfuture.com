@@ -1,9 +1,8 @@
 import {
-    GameWorld,
     GameWorldModifier,
     CardActionData,
-    EventCardActionData,
     WorldQuery,
+    Experimental,
 } from './ContentTypes'
 import { Game, GameState, Card, CardAction, StateModifier, Stat } from './Types'
 import { Params, ParamQuery, hasMatchingParamQuery } from './Params'
@@ -19,19 +18,16 @@ import { stateExtensionsFromData, createParameterCap } from './StateExtensions'
  * @returns A Game<Params> object which uses the given data
  */
 export function load(
-    gameWorld: GameWorld,
+    gameWorld: Experimental.GameWorld,
     random: () => number = Math.random,
 ): Game<Params> {
     const defaultParams = {
         flags: gameWorld.defaultState.flags,
         vars: gameWorld.defaultState.state,
     }
-    const cards = gameWorld.cards.map<Card<Params>>((data) =>
-        cardFromData(data, defaultParams),
-    )
-    const eventCards = eventCardsFromData(gameWorld.eventCards, defaultParams)
+    const cardMap = cardsFromData(gameWorld.cards, defaultParams)
     const events: StateModifier<Params>[] = gameWorld.events.map((event) => {
-        const card = eventCards[event.initialEventCardId]
+        const card = cardMap[event.cardId]
         return eventFromData(event, card, random)
     })
     const parameterCaps = parameterCapsFromStats(gameWorld.stats)
@@ -39,6 +35,8 @@ export function load(
     const stateExtensions = stateExtensionsFromData(
         gameWorld.worldStateModifiers,
     )
+    const cards = Object.values(cardMap)
+
     return new BasicGame<Params>([...cards], stats, defaultParams, {
         tickModifiers: [...events, ...stateExtensions, parameterCaps],
         random,
@@ -54,7 +52,7 @@ export function load(
  * @returns An event trigger in the form of a StateModifier
  */
 function eventFromData(
-    event: GameWorld['events'][number],
+    event: Experimental.GameWorld['events'][number],
     card: Card<Params>,
     random: () => number,
 ): StateModifier<Params> {
@@ -81,7 +79,7 @@ function eventFromData(
  * @param stats The stats data
  * @returns A list of Stats
  */
-function statsFromData(stats: GameWorld['stats']): Stat<Params>[] {
+function statsFromData(stats: Experimental.GameWorld['stats']): Stat<Params>[] {
     return stats.map<Stat<Params>>((stat) => ({
         ...stat,
         getValue: ({ params }) => params.vars[stat.id] ?? 0,
@@ -94,7 +92,7 @@ function statsFromData(stats: GameWorld['stats']): Stat<Params>[] {
  * @param stats The stats data
  * @returns A stat modifier which caps all the vars matched to ids in stats to [0, 100]
  */
-function parameterCapsFromStats(stats: GameWorld['stats']) {
+function parameterCapsFromStats(stats: Experimental.GameWorld['stats']) {
     const statVarIds = stats.map((stat) => stat.id)
     return createParameterCap(statVarIds, 0, 100)
 }
@@ -107,7 +105,7 @@ function parameterCapsFromStats(stats: GameWorld['stats']) {
  * @returns A runtime model of a card
  */
 function cardFromData(
-    data: GameWorld['cards'][number] | GameWorld['eventCards'][string],
+    data: Experimental.CardData,
     defaultParams: Params,
 ): Card<Params> {
     const paramQueries = ('isAvailableWhen' in data
@@ -135,34 +133,38 @@ function cardFromData(
  * @param defaultParams Default params to use for a state reset
  * @returns A map of event cards
  */
-function eventCardsFromData(
-    eventCardsData: GameWorld['eventCards'],
+function cardsFromData(
+    cardsData: Experimental.CardData[],
     defaultParams: Params,
 ): { [x: string]: Card<Params> } {
-    const eventCards = Object.keys(eventCardsData).reduce<{
-        [x: string]: Card<Params>
-    }>((acc, key) => {
-        const data = eventCardsData[key]
-        acc[key] = cardFromData(data, defaultParams)
-        return acc
-    }, {})
+    const { cardMap, cardDataMap } = cardsData.reduce<{
+        cardMap: { [x: string]: Card<Params> }
+        cardDataMap: { [x: string]: Experimental.CardData }
+    }>(
+        (acc, data) => {
+            acc.cardMap[data.id] = cardFromData(data, defaultParams)
+            acc.cardDataMap[data.id] = data
+            return acc
+        },
+        { cardMap: {}, cardDataMap: {} },
+    )
 
-    for (const cardId in eventCards) {
-        const data = eventCardsData[cardId]
-        const eventCard = eventCards[cardId]
+    for (const cardId in cardMap) {
+        const data = cardDataMap[cardId]
+        const eventCard = cardMap[cardId]
 
-        eventCard.actions.left.modifier = eventCardChain(
+        eventCard.actions.left.modifier = cardChain(
             data.actions.left,
-            eventCards,
+            cardMap,
             eventCard.actions.left.modifier,
         )
-        eventCard.actions.right.modifier = eventCardChain(
+        eventCard.actions.right.modifier = cardChain(
             data.actions.right,
-            eventCards,
+            cardMap,
             eventCard.actions.right.modifier,
         )
     }
-    return eventCards
+    return cardMap
 }
 
 /**
@@ -174,13 +176,12 @@ function eventCardsFromData(
  * @param modifier The current modifier without card trigger
  * @returns A StateModifier with conditionally added next card trigger
  */
-function eventCardChain(
-    data: EventCardActionData,
+function cardChain(
+    data: Experimental.CardActionData,
     eventCards: { [x: string]: Card<Params> },
     modifier: StateModifier<Params>,
 ): StateModifier<Params> {
-    const targetCard =
-        data.nextEventCardId !== null ? eventCards[data.nextEventCardId] : null
+    const targetCard = data.nextCardId ? eventCards[data.nextCardId] : null
     return targetCard
         ? (state) => ({
               ...modifier(state),
